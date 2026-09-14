@@ -29,6 +29,9 @@ jobs:
           echo '{"project_info":{"project_number":"123","project_id":"dummy"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:123","android_client_info":{"package_name":"com.aistudio.omniai.vxtzqr"}},"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}]}' > app/google-services.json
         fi
 
+    - name: Decode keystore
+      run: base64 -d debug.keystore.base64 > debug.keystore
+
     - name: Fix line endings and permissions
       run: |
         sed -i 's/\r$//' gradlew
