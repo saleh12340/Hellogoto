@@ -18,11 +18,16 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: gradle
 
-    - name: Create dummy .env file
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Create dummy .env and google-services.json
       run: |
         echo "GEMINI_API_KEY=dummy_key_for_ci" > .env
+        if [ ! -f app/google-services.json ]; then
+          echo '{"project_info":{"project_number":"123","project_id":"dummy"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:123","android_client_info":{"package_name":"com.aistudio.omniai.vxtzqr"}},"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}]}' > app/google-services.json
+        fi
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
