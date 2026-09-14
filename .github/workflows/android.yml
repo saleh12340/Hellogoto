@@ -30,6 +30,7 @@ jobs:
       - name: Create CI environment files
         shell: bash
         run: |
+          set -euo pipefail
           printf '%s\n' 'GEMINI_API_KEY=dummy_key_for_ci' > .env
           if [ ! -f app/google-services.json ]; then
             cat > app/google-services.json <<'JSON'
@@ -37,13 +38,21 @@ jobs:
           JSON
           fi
 
-      - name: Prepare debug keystore
+      - name: Prepare valid debug keystore
         shell: bash
         run: |
           set -euo pipefail
+          rm -f debug.keystore
           if [ -f debug.keystore.base64 ]; then
-            base64 --decode debug.keystore.base64 > debug.keystore
-          elif [ ! -f debug.keystore ]; then
+            if base64 --decode debug.keystore.base64 > debug.keystore 2>/dev/null && \
+               keytool -list -keystore debug.keystore -storepass android -alias androiddebugkey >/dev/null 2>&1; then
+              echo "Using repository debug keystore"
+            else
+              echo "Repository debug.keystore.base64 is invalid; generating a fresh CI keystore"
+              rm -f debug.keystore
+            fi
+          fi
+          if [ ! -s debug.keystore ]; then
             keytool -genkeypair \
               -keystore debug.keystore \
               -storepass android \
