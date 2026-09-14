@@ -20,10 +20,12 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Create dummy .env file
+      run: |
+        echo "GEMINI_API_KEY=dummy_key_for_ci" > .env
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-      # Note: gradlew might not be present in the AI Studio environment initially, 
-      # but it's standard for GitHub repos.
 
     - name: Build with Gradle
       run: ./gradlew assembleDebug
