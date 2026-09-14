@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,110 +19,6 @@ import com.example.data.local.Invoice
 import com.example.data.local.InvoiceItem
 import com.example.ui.OmniViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddInvoiceScreen(navController: NavController, viewModel: OmniViewModel) {
-    var customerName by remember { mutableStateOf("") }
-    var itemName by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    
-    val currentItems = remember { mutableStateListOf<InvoiceItem>() }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("New Invoice") })
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                if (customerName.isNotBlank() && currentItems.isNotEmpty()) {
-                    val total = currentItems.sumOf { it.price * it.quantity }
-                    viewModel.saveInvoice(Invoice(customerName = customerName, totalAmount = total), currentItems.toList())
-                    navController.popBackStack()
-                }
-            }) {
-                Icon(Icons.Default.Save, contentDescription = "Save")
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            OutlinedTextField(
-                value = customerName,
-                onValueChange = { customerName = it },
-                label = { Text("Customer Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text("Add Items", style = MaterialTheme.typography.titleMedium)
-            
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = itemName,
-                    onValueChange = { itemName = it },
-                    label = { Text("Item") },
-                    modifier = Modifier.weight(2f)
-                )
-                IconButton(onClick = {
-                    viewModel.sendMessage("Suggest 3 common grocery items. Respond with only item names separated by commas.", modelType = "lite")
-                }) {
-                    Icon(Icons.Default.Star, contentDescription = "AI Suggest")
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { quantity = it },
-                    label = { Text("Qty") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                OutlinedTextField(
-                    value = price,
-                    onValueChange = { price = it },
-                    label = { Text("Price") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                IconButton(onClick = {
-                    if (itemName.isNotBlank() && quantity.isNotBlank() && price.isNotBlank()) {
-                        currentItems.add(InvoiceItem(
-                            invoiceId = 0,
-                            itemName = itemName,
-                            quantity = quantity.toIntOrNull() ?: 1,
-                            price = price.toDoubleOrNull() ?: 0.0
-                        ))
-                        itemName = ""
-                        quantity = ""
-                        price = ""
-                    }
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Item")
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(currentItems) { item ->
-                    ListItem(
-                        headlineContent = { Text(item.itemName) },
-                        supportingContent = { Text("${item.quantity} x ${item.price} SAR") },
-                        trailingContent = { Text("${item.quantity * item.price} SAR") }
-                    )
-                }
-            }
-            
-            Divider()
-            
-            val total = currentItems.sumOf { it.price * it.quantity }
-            Text(
-                "Total: $total SAR",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.align(Alignment.End).padding(top = 16.dp)
-            )
-        }
-    }
-}
+@Composable fun AddInvoiceScreen(navController: NavController, viewModel: OmniViewModel) {
+    var customer by remember{mutableStateOf("")};var item by remember{mutableStateOf("")};var qty by remember{mutableStateOf("")};var price by remember{mutableStateOf("")};var paid by remember{mutableStateOf("")};val rows=remember{mutableStateListOf<InvoiceItem>()};val total=rows.sumOf{it.quantity*it.price}
+    Scaffold(topBar={TopAppBar(title={Text("فاتورة مبيعات جديدة")})},floatingActionButton={FloatingActionButton({if(customer.isNotBlank()&&rows.isNotEmpty()){viewModel.saveInvoice(Invoice(customerName=customer.trim(),totalAmount=total,paidAmount=paid.toDoubleOrNull()?:0.0),rows.toList());navController.popBackStack()}}){Icon(Icons.Default.Save,"حفظ")}}){pad->Column(Modifier.fillMaxSize().padding(pad).padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){OutlinedTextField(customer,{customer=it},label={Text("اسم العميل")},modifier=Modifier.fillMaxWidth());Text("الأصناف",style=MaterialTheme.typography.titleMedium);Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically){OutlinedTextField(item,{item=it},label={Text("الصنف")},modifier=Modifier.weight(2f));OutlinedTextField(qty,{qty=it},label={Text("الكمية")},modifier=Modifier.weight(1f),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Decimal));OutlinedTextField(price,{price=it},label={Text("السعر")},modifier=Modifier.weight(1f),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Decimal));IconButton({val q=qty.toDoubleOrNull();val p=price.toDoubleOrNull();if(item.isNotBlank()&&q!=null&&q>0&&p!=null&&p>=0){rows.add(InvoiceItem(invoiceId=0,itemName=item.trim(),quantity=q,price=p));item="";qty="";price=""}}){Icon(Icons.Default.Add,"إضافة")}};LazyColumn(Modifier.weight(1f)){items(rows){r->ListItem(headlineContent={Text(r.itemName)},supportingContent={Text("${r.quantity} × ${r.price}")},trailingContent={Row(verticalAlignment=Alignment.CenterVertically){Text("${r.quantity*r.price}");IconButton({rows.remove(r)}){Icon(Icons.Default.Delete,"حذف")}})}}};HorizontalDivider();Text("الإجمالي: $total",style=MaterialTheme.typography.headlineSmall);OutlinedTextField(paid,{paid=it},label={Text("المبلغ المدفوع")},modifier=Modifier.fillMaxWidth(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Decimal));Text("المتبقي: ${total-(paid.toDoubleOrNull()?:0.0)}",style=MaterialTheme.typography.titleMedium)}}}
