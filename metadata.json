@@ -1,6 +1,6 @@
 {
-  "name": "OmniAI",
-  "description": "An all-in-one AI assistant featuring multi-model chat, image & music generation, voice conversations, and search grounding.",
+  "name": "Grocery Invoice",
+  "description": "A smart grocery invoice and notebook app with integrated AI assistant, image generation, and voice features.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

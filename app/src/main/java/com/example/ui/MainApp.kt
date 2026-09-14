@@ -17,6 +17,8 @@ import com.example.ui.chat.ChatScreen
 import com.example.ui.image.ImageScreen
 import com.example.ui.music.MusicScreen
 import com.example.ui.voice.VoiceScreen
+import com.example.ui.grocery.InvoicesScreen
+import com.example.ui.grocery.AddInvoiceScreen
 
 @Composable
 fun MainApp(omniViewModel: OmniViewModel = viewModel()) {
@@ -32,8 +34,9 @@ fun MainApp(omniViewModel: OmniViewModel = viewModel()) {
             bottomBar = {
                 NavigationBar {
                     val items = listOf(
-                        Triple("chat", "Chat", Icons.Default.Chat),
-                        Triple("image", "Image", Icons.Default.Image),
+                        Triple("invoices", "Invoices", Icons.Default.Receipt),
+                        Triple("chat", "AI Assistant", Icons.Default.Psychology),
+                        Triple("image", "Design", Icons.Default.Brush),
                         Triple("music", "Music", Icons.Default.MusicNote),
                         Triple("voice", "Voice", Icons.Default.Mic)
                     )
@@ -58,9 +61,11 @@ fun MainApp(omniViewModel: OmniViewModel = viewModel()) {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "chat",
+                startDestination = "invoices",
                 modifier = Modifier.padding(innerPadding)
             ) {
+                composable("invoices") { InvoicesScreen(navController, omniViewModel) }
+                composable("add_invoice") { AddInvoiceScreen(navController, omniViewModel) }
                 composable("chat") { ChatScreen(omniViewModel) }
                 composable("image") { ImageScreen(omniViewModel) }
                 composable("music") { MusicScreen(omniViewModel) }

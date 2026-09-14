@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "OmniAI"
+rootProject.name = "Grocery Invoice"
 
 include(":app")

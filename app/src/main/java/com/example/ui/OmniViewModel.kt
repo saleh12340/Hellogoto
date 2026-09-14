@@ -1,10 +1,17 @@
 package com.example.ui
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.BuildConfig
 import com.example.data.api.RetrofitClient
+import com.example.data.local.GroceryDatabase
+import com.example.data.local.Invoice
+import com.example.data.local.InvoiceItem
 import com.example.data.model.*
+import com.example.data.repository.GroceryRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -14,8 +21,29 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
-class OmniViewModel : ViewModel() {
+class OmniViewModel(application: Application) : AndroidViewModel(application) {
     private val apiKey = BuildConfig.GEMINI_API_KEY
+    
+    private val repository: GroceryRepository
+    val allInvoices: Flow<List<Invoice>>
+
+    init {
+        val invoiceDao = GroceryDatabase.getDatabase(application).invoiceDao()
+        repository = GroceryRepository(invoiceDao)
+        allInvoices = repository.allInvoices
+    }
+
+    fun saveInvoice(invoice: Invoice, items: List<InvoiceItem>) {
+        viewModelScope.launch {
+            repository.insertInvoiceWithItems(invoice, items)
+        }
+    }
+
+    fun deleteInvoice(invoice: Invoice) {
+        viewModelScope.launch {
+            repository.deleteInvoice(invoice)
+        }
+    }
 
     // Chat State
     private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
