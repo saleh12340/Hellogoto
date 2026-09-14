@@ -7,70 +7,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.example.data.firebase.FirebaseManager
 import com.example.ui.auth.AuthScreen
 import com.example.ui.chat.ChatScreen
 import com.example.ui.image.ImageScreen
 import com.example.ui.music.MusicScreen
 import com.example.ui.voice.VoiceScreen
-import com.example.ui.grocery.InvoicesScreen
-import com.example.ui.grocery.AddInvoiceScreen
+import com.example.ui.grocery.*
 
-@Composable
-fun MainApp(omniViewModel: OmniViewModel = viewModel()) {
-    val navController = rememberNavController()
-    val currentUser by FirebaseManager.currentUser.collectAsState()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    if (currentUser == null) {
-        AuthScreen()
-    } else {
-        Scaffold(
-            bottomBar = {
-                NavigationBar {
-                    val items = listOf(
-                        Triple("invoices", "Invoices", Icons.Default.Receipt),
-                        Triple("chat", "AI Assistant", Icons.Default.Psychology),
-                        Triple("image", "Design", Icons.Default.Brush),
-                        Triple("music", "Music", Icons.Default.MusicNote),
-                        Triple("voice", "Voice", Icons.Default.Mic)
-                    )
-                    items.forEach { (route, label, icon) ->
-                        NavigationBarItem(
-                            icon = { Icon(icon, contentDescription = label) },
-                            label = { Text(label) },
-                            selected = currentRoute == route,
-                            onClick = {
-                                if (currentRoute != route) {
-                                    navController.navigate(route) {
-                                        popUpTo("chat") { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = "invoices",
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable("invoices") { InvoicesScreen(navController, omniViewModel) }
-                composable("add_invoice") { AddInvoiceScreen(navController, omniViewModel) }
-                composable("chat") { ChatScreen(omniViewModel) }
-                composable("image") { ImageScreen(omniViewModel) }
-                composable("music") { MusicScreen(omniViewModel) }
-                composable("voice") { VoiceScreen(omniViewModel) }
-            }
-        }
-    }
+@Composable fun MainApp(omniViewModel: OmniViewModel = viewModel()) {
+    val navController=rememberNavController(); val currentUser by FirebaseManager.currentUser.collectAsState(); val entry by navController.currentBackStackEntryAsState(); val route=entry?.destination?.route
+    if(currentUser==null){AuthScreen();return}
+    val items=listOf("home" to ("الرئيسية" to Icons.Default.Home),"invoices" to ("الفواتير" to Icons.Default.Receipt),"customers" to ("العملاء" to Icons.Default.People),"products" to ("المخزون" to Icons.Default.Inventory),"reports" to ("التقارير" to Icons.Default.Assessment))
+    Scaffold(bottomBar={NavigationBar{items.forEach{(r,p)->NavigationBarItem(selected=route==r,onClick={navController.navigate(r){popUpTo("home"){saveState=true};launchSingleTop=true;restoreState=true}},icon={Icon(p.second,null)},label={Text(p.first)})}}}){pad->NavHost(navController,"home",Modifier.padding(pad)){composable("home"){DashboardScreen(omniViewModel){navController.navigate(it)}};composable("invoices"){InvoicesScreen(navController,omniViewModel)};composable("add_invoice"){AddInvoiceScreen(navController,omniViewModel)};composable("customers"){CustomersScreen(omniViewModel)};composable("products"){ProductsScreen(omniViewModel)};composable("reports"){ReportsScreen(omniViewModel)};composable("chat"){ChatScreen(omniViewModel)};composable("image"){ImageScreen(omniViewModel)};composable("music"){MusicScreen(omniViewModel)};composable("voice"){VoiceScreen(omniViewModel)}}}
 }
