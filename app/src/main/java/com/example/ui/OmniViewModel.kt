@@ -15,7 +15,6 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 
 class OmniViewModel(application: Application) : AndroidViewModel(application) {
     private val apiKey = BuildConfig.GEMINI_API_KEY
@@ -35,6 +34,7 @@ class OmniViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveInvoice(invoice: Invoice, items: List<InvoiceItem>) = viewModelScope.launch { repository.saveInvoice(invoice, items) }
     fun deleteInvoice(invoice: Invoice) = viewModelScope.launch { repository.deleteInvoice(invoice) }
+    fun invoiceItems(invoiceId: Long) = repository.getItems(invoiceId)
     fun saveCustomer(customer: Customer) = viewModelScope.launch { repository.saveCustomer(customer) }
     fun deleteCustomer(customer: Customer) = viewModelScope.launch { repository.deleteCustomer(customer) }
     fun saveProduct(product: Product) = viewModelScope.launch { repository.saveProduct(product) }
