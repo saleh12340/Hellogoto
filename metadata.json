@@ -1,6 +1,6 @@
 {
-  "name": "Grocery Invoice",
-  "description": "A smart grocery invoice and notebook app with integrated AI assistant, image generation, and voice features.",
+  "name": "Empty App",
+  "description": "An empty project shell.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
