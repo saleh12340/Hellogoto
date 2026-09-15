@@ -18,4 +18,5 @@
     <string name="confirm_delete">هل أنت متأكد من الحذف؟</string>
     <string name="cancel">إلغاء</string>
     <string name="save">حفظ</string>
+    <string name="edit_item">تعديل الصنف</string>
 </resources>

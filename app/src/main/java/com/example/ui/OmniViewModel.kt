@@ -69,6 +69,10 @@ class OmniViewModel(private val repository: NoteRepository) : ViewModel() {
         viewModelScope.launch { repository.deleteItem(item) }
     }
 
+    fun updateItem(item: NoteItem) {
+        viewModelScope.launch { repository.saveItem(item) }
+    }
+
     fun clearCurrentNote() {
         val noteId = _currentNoteId.value ?: return
         viewModelScope.launch { repository.clearNote(noteId) }

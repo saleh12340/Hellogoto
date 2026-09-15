@@ -20,6 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,10 +37,14 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
     val currentItems by viewModel.currentItems.collectAsStateWithLifecycle()
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     
-    var itemName by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("1") }
-    var section by remember { mutableStateOf("") }
+    var itemName by remember { mutableStateOf(TextFieldValue("")) }
+    var quantity by remember { mutableStateOf(TextFieldValue("1")) }
+    var section by remember { mutableStateOf(TextFieldValue("")) }
     var showSuggestions by remember { mutableStateOf(false) }
+    
+    var editingItem by remember { mutableStateOf<NoteItem?>(null) }
+    var editName by remember { mutableStateOf(TextFieldValue("")) }
+    var editQuantity by remember { mutableStateOf(TextFieldValue("")) }
 
     val context = LocalContext.current
 
@@ -46,22 +53,23 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
         val html = buildString {
             append("<html><body style='font-family: Arial; direction: rtl;'>")
             append("<h2 style='text-align: center;'>${currentNote?.title ?: ""}</h2>")
-            append("<table style='width: 100%; border-collapse: collapse;'>")
+            append("<table style='width: 100%; border-collapse: collapse; table-layout: fixed;'>")
             val items = currentItems
             for (i in items.indices step 2) {
                 append("<tr>")
-                // Left col
+                // Left col (order: Action/Return -> Name -> Qty)
                 val left = items[i]
-                append("<td style='border: 1px solid black; padding: 4px;'>${left.name}</td>")
-                append("<td style='border: 1px solid black; padding: 4px; text-align: center;'>${if (left.quantity % 1.0 == 0.0) left.quantity.toInt() else left.quantity}</td>")
+                append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
+                append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${left.name}</td>")
+                append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (left.quantity % 1.0 == 0.0) left.quantity.toInt() else left.quantity}</td>")
                 
                 // Right col
                 if (i + 1 < items.size) {
                     val right = items[i+1]
-                    append("<td style='border: 1px solid black; padding: 4px;'>${right.name}</td>")
-                    append("<td style='border: 1px solid black; padding: 4px; text-align: center;'>${if (right.quantity % 1.0 == 0.0) right.quantity.toInt() else right.quantity}</td>")
+                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${right.name}</td>")
+                    append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (right.quantity % 1.0 == 0.0) right.quantity.toInt() else right.quantity}</td>")
                 } else {
-                    append("<td colspan='2'></td>")
+                    append("<td colspan='2' style='border: 1px solid black;'></td>")
                 }
                 append("</tr>")
             }
@@ -135,7 +143,9 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                             value = quantity,
                             onValueChange = { quantity = it },
                             label = { Text(stringResource(R.string.quantity), color = Color.White) },
-                            modifier = Modifier.weight(0.3f),
+                            modifier = Modifier.weight(0.3f).onFocusChanged { 
+                                if (it.isFocused) quantity = quantity.copy(selection = TextRange(0, quantity.text.length)) 
+                            },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
@@ -151,10 +161,12 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                                 value = itemName,
                                 onValueChange = { 
                                     itemName = it
-                                    showSuggestions = it.isNotEmpty()
+                                    showSuggestions = it.text.isNotEmpty()
                                 },
                                 label = { Text(stringResource(R.string.item_name), color = Color.White) },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().onFocusChanged {
+                                    if (it.isFocused) itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
+                                },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
@@ -164,17 +176,17 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                                     unfocusedBorderColor = Color.LightGray
                                 )
                             )
-                            if (showSuggestions && suggestions.any { it.word.contains(itemName, ignoreCase = true) }) {
+                            if (showSuggestions && suggestions.any { it.word.contains(itemName.text, ignoreCase = true) }) {
                                 Card(
                                     Modifier.fillMaxWidth().padding(top = 60.dp),
                                     elevation = CardDefaults.cardElevation(4.dp)
                                 ) {
                                     Column {
-                                        suggestions.filter { it.word.contains(itemName, ignoreCase = true) }.take(5).forEach { sug ->
+                                        suggestions.filter { it.word.contains(itemName.text, ignoreCase = true) }.take(5).forEach { sug ->
                                             Text(
                                                 sug.word,
                                                 Modifier.fillMaxWidth().clickable {
-                                                    itemName = sug.word
+                                                    itemName = TextFieldValue(sug.word, TextRange(sug.word.length))
                                                     showSuggestions = false
                                                 }.padding(12.dp)
                                             )
@@ -188,7 +200,9 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                             value = section,
                             onValueChange = { section = it },
                             label = { Text(stringResource(R.string.target_section), color = Color.White) },
-                            modifier = Modifier.weight(0.4f),
+                            modifier = Modifier.weight(0.4f).onFocusChanged {
+                                if (it.isFocused) section = section.copy(selection = TextRange(0, section.text.length))
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
@@ -202,10 +216,11 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                     
                     Button(
                         onClick = {
-                            if (itemName.isNotBlank()) {
-                                viewModel.addItem(itemName, quantity.toDoubleOrNull() ?: 1.0, section)
-                                itemName = ""
-                                quantity = "1"
+                            if (itemName.text.isNotBlank()) {
+                                viewModel.addItem(itemName.text, quantity.text.toDoubleOrNull() ?: 1.0, section.text)
+                                itemName = TextFieldValue("")
+                                quantity = TextFieldValue("1")
+                                section = TextFieldValue("")
                                 showSuggestions = false
                             }
                         },
@@ -231,7 +246,13 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                     Row(Modifier.fillMaxWidth()) {
                         // Left Column Item
                         if (rowIndex < leftItems.size) {
-                            NoteItemRow(leftItems[rowIndex], fontSize, Modifier.weight(1f)) { viewModel.deleteItem(it) }
+                            NoteItemRow(
+                                leftItems[rowIndex], 
+                                fontSize, 
+                                Modifier.weight(1f),
+                                onUpdate = { viewModel.updateItem(it) },
+                                onDelete = { viewModel.deleteItem(it) }
+                            )
                         } else {
                             Box(Modifier.weight(1f))
                         }
@@ -241,7 +262,13 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                         
                         // Right Column Item
                         if (rowIndex < rightItems.size) {
-                            NoteItemRow(rightItems[rowIndex], fontSize, Modifier.weight(1f)) { viewModel.deleteItem(it) }
+                            NoteItemRow(
+                                rightItems[rowIndex], 
+                                fontSize, 
+                                Modifier.weight(1f),
+                                onUpdate = { viewModel.updateItem(it) },
+                                onDelete = { viewModel.deleteItem(it) }
+                            )
                         } else {
                             Box(Modifier.weight(1f))
                         }
@@ -254,18 +281,61 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
 }
 
 @Composable
-fun NoteItemRow(item: NoteItem, fontSize: androidx.compose.ui.unit.TextUnit, modifier: Modifier, onDelete: (NoteItem) -> Unit) {
+fun NoteItemRow(
+    item: NoteItem, 
+    fontSize: androidx.compose.ui.unit.TextUnit, 
+    modifier: Modifier, 
+    onUpdate: (NoteItem) -> Unit,
+    onDelete: (NoteItem) -> Unit
+) {
+    var isEditing by remember { mutableStateOf(false) }
+    var editName by remember { mutableStateOf(TextFieldValue(item.name)) }
+    var editQty by remember { mutableStateOf(TextFieldValue(if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString())) }
+
+    if (isEditing) {
+        AlertDialog(
+            onDismissRequest = { isEditing = false },
+            title = { Text(stringResource(R.string.edit_item)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text(stringResource(R.string.item_name)) },
+                        modifier = Modifier.onFocusChanged {
+                            if (it.isFocused) editName = editName.copy(selection = TextRange(0, editName.text.length))
+                        }
+                    )
+                    OutlinedTextField(
+                        value = editQty,
+                        onValueChange = { editQty = it },
+                        label = { Text(stringResource(R.string.quantity)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.onFocusChanged {
+                            if (it.isFocused) editQty = editQty.copy(selection = TextRange(0, editQty.text.length))
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onUpdate(item.copy(name = editName.text, quantity = editQty.text.toDoubleOrNull() ?: 1.0))
+                    isEditing = false
+                }) { Text(stringResource(R.string.save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { isEditing = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
     Row(
-        modifier.padding(4.dp).clickable { /* Maybe edit? */ },
+        modifier.padding(4.dp).clickable { isEditing = true },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
-            modifier = Modifier.width(30.dp),
-            textAlign = TextAlign.Center,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold
-        )
+        IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
+            Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
+        }
         Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
         Text(
             text = item.name,
@@ -274,9 +344,14 @@ fun NoteItemRow(item: NoteItem, fontSize: androidx.compose.ui.unit.TextUnit, mod
             textAlign = TextAlign.End,
             color = Color(0xFF0D47A1)
         )
-        IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
-            Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
-        }
+        Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+        Text(
+            text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
+            modifier = Modifier.width(40.dp),
+            textAlign = TextAlign.Center,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
