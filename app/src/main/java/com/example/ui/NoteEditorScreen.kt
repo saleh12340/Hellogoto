@@ -27,6 +27,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import com.example.R
 import com.example.data.NoteItem
 import com.example.data.Suggestion
@@ -41,6 +43,8 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
     var itemName by remember { mutableStateOf(TextFieldValue("")) }
     var quantity by remember { mutableStateOf(TextFieldValue("1")) }
     var showSuggestions by remember { mutableStateOf(false) }
+    
+    val scope = rememberCoroutineScope()
     
     var editingItem by remember { mutableStateOf<NoteItem?>(null) }
     var editName by remember { mutableStateOf(TextFieldValue("")) }
@@ -154,7 +158,12 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                             onValueChange = { quantity = it },
                             label = { Text(stringResource(R.string.quantity)) },
                             modifier = Modifier.weight(0.3f).onFocusChanged { 
-                                if (it.isFocused) quantity = quantity.copy(selection = TextRange(0, quantity.text.length)) 
+                                if (it.isFocused) {
+                                    scope.launch {
+                                        delay(100)
+                                        quantity = quantity.copy(selection = TextRange(0, quantity.text.length))
+                                    }
+                                }
                             },
                             shape = androidx.compose.foundation.shape.CircleShape,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
@@ -174,7 +183,12 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                                 },
                                 label = { Text(stringResource(R.string.item_name)) },
                                 modifier = Modifier.fillMaxWidth().onFocusChanged {
-                                    if (it.isFocused) itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
+                                    if (it.isFocused) {
+                                        scope.launch {
+                                            delay(100)
+                                            itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
+                                        }
+                                    }
                                 },
                                 shape = androidx.compose.foundation.shape.CircleShape,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -297,6 +311,7 @@ fun NoteItemRow(
     onDelete: (NoteItem) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     var editName by remember { mutableStateOf(TextFieldValue(item.name)) }
     var editQty by remember { mutableStateOf(TextFieldValue(if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString())) }
 
@@ -311,7 +326,12 @@ fun NoteItemRow(
                         onValueChange = { editName = it },
                         label = { Text(stringResource(R.string.item_name)) },
                         modifier = Modifier.onFocusChanged {
-                            if (it.isFocused) editName = editName.copy(selection = TextRange(0, editName.text.length))
+                            if (it.isFocused) {
+                                scope.launch {
+                                    delay(100)
+                                    editName = editName.copy(selection = TextRange(0, editName.text.length))
+                                }
+                            }
                         },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
@@ -324,7 +344,12 @@ fun NoteItemRow(
                             imeAction = ImeAction.Done
                         ),
                         modifier = Modifier.onFocusChanged {
-                            if (it.isFocused) editQty = editQty.copy(selection = TextRange(0, editQty.text.length))
+                            if (it.isFocused) {
+                                scope.launch {
+                                    delay(100)
+                                    editQty = editQty.copy(selection = TextRange(0, editQty.text.length))
+                                }
+                            }
                         }
                     )
                 }
