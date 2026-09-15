@@ -38,14 +38,9 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
     val currentItems by viewModel.currentItems.collectAsStateWithLifecycle()
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     
-    var itemNameLeft by remember { mutableStateOf(TextFieldValue("")) }
-    var quantityLeft by remember { mutableStateOf(TextFieldValue("1")) }
-    
-    var itemNameRight by remember { mutableStateOf(TextFieldValue("")) }
-    var quantityRight by remember { mutableStateOf(TextFieldValue("1")) }
-
-    var showSuggestionsLeft by remember { mutableStateOf(false) }
-    var showSuggestionsRight by remember { mutableStateOf(false) }
+    var itemName by remember { mutableStateOf(TextFieldValue("")) }
+    var quantity by remember { mutableStateOf(TextFieldValue("1")) }
+    var showSuggestions by remember { mutableStateOf(false) }
     
     var editingItem by remember { mutableStateOf<NoteItem?>(null) }
     var editName by remember { mutableStateOf(TextFieldValue("")) }
@@ -149,141 +144,97 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
             // Input Area
             Card(
                 Modifier.fillMaxWidth().padding(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A237E))
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Left Input Column
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("الشق الأيسر", color = Color.White, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
-                            value = quantityLeft,
-                            onValueChange = { quantityLeft = it },
-                            label = { Text(stringResource(R.string.quantity), color = Color.White) },
-                            modifier = Modifier.fillMaxWidth().onFocusChanged { 
-                                if (it.isFocused) quantityLeft = quantityLeft.copy(selection = TextRange(0, quantityLeft.text.length)) 
+                            value = quantity,
+                            onValueChange = { quantity = it },
+                            label = { Text(stringResource(R.string.quantity)) },
+                            modifier = Modifier.weight(0.3f).onFocusChanged { 
+                                if (it.isFocused) quantity = quantity.copy(selection = TextRange(0, quantity.text.length)) 
                             },
                             shape = androidx.compose.foundation.shape.CircleShape,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
-                                focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             )
                         )
-                        Box {
+                        Box(Modifier.weight(0.7f)) {
                             OutlinedTextField(
-                                value = itemNameLeft,
+                                value = itemName,
                                 onValueChange = { 
-                                    itemNameLeft = it
-                                    showSuggestionsLeft = it.text.isNotEmpty()
+                                    itemName = it
+                                    showSuggestions = it.text.isNotEmpty()
                                 },
-                                label = { Text(stringResource(R.string.item_name), color = Color.White) },
+                                label = { Text(stringResource(R.string.item_name)) },
                                 modifier = Modifier.fillMaxWidth().onFocusChanged {
-                                    if (it.isFocused) itemNameLeft = itemNameLeft.copy(selection = TextRange(0, itemNameLeft.text.length))
+                                    if (it.isFocused) itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
                                 },
                                 shape = androidx.compose.foundation.shape.CircleShape,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                    focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
-                                    focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 )
                             )
-                            if (showSuggestionsLeft && suggestions.any { it.word.contains(itemNameLeft.text, ignoreCase = true) }) {
-                                Card(Modifier.fillMaxWidth().padding(top = 60.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+                            if (showSuggestions && suggestions.any { it.word.contains(itemName.text, ignoreCase = true) }) {
+                                Card(Modifier.fillMaxWidth().padding(top = 60.dp), elevation = CardDefaults.cardElevation(8.dp)) {
                                     Column {
-                                        suggestions.filter { it.word.contains(itemNameLeft.text, ignoreCase = true) }.take(5).forEach { sug ->
+                                        suggestions.filter { it.word.contains(itemName.text, ignoreCase = true) }.take(5).forEach { sug ->
                                             Text(sug.word, Modifier.fillMaxWidth().clickable {
-                                                itemNameLeft = TextFieldValue(sug.word, TextRange(sug.word.length))
-                                                showSuggestionsLeft = false
+                                                itemName = TextFieldValue(sug.word, TextRange(sug.word.length))
+                                                showSuggestions = false
                                             }.padding(12.dp))
                                         }
                                     }
                                 }
                             }
-                        }
-                        Button(
-                            onClick = {
-                                if (itemNameLeft.text.isNotBlank()) {
-                                    viewModel.addItem(itemNameLeft.text, quantityLeft.text.toDoubleOrNull() ?: 1.0, "left")
-                                    itemNameLeft = TextFieldValue("")
-                                    quantityLeft = TextFieldValue("1")
-                                    showSuggestionsLeft = false
-                                }
-                            },
-                            Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                        ) {
-                            Icon(Icons.Default.Add, null)
                         }
                     }
 
-                    // Divider
-                    Box(Modifier.width(1.dp).fillMaxHeight().background(Color.White))
-
-                    // Right Input Column
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("الشق الأيمن", color = Color.White, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-                        OutlinedTextField(
-                            value = quantityRight,
-                            onValueChange = { quantityRight = it },
-                            label = { Text(stringResource(R.string.quantity), color = Color.White) },
-                            modifier = Modifier.fillMaxWidth().onFocusChanged { 
-                                if (it.isFocused) quantityRight = quantityRight.copy(selection = TextRange(0, quantityRight.text.length)) 
-                            },
-                            shape = androidx.compose.foundation.shape.CircleShape,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
-                                focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
-                            )
-                        )
-                        Box {
-                            OutlinedTextField(
-                                value = itemNameRight,
-                                onValueChange = { 
-                                    itemNameRight = it
-                                    showSuggestionsRight = it.text.isNotEmpty()
-                                },
-                                label = { Text(stringResource(R.string.item_name), color = Color.White) },
-                                modifier = Modifier.fillMaxWidth().onFocusChanged {
-                                    if (it.isFocused) itemNameRight = itemNameRight.copy(selection = TextRange(0, itemNameRight.text.length))
-                                },
-                                shape = androidx.compose.foundation.shape.CircleShape,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                    focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
-                                    focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
-                                )
-                            )
-                            if (showSuggestionsRight && suggestions.any { it.word.contains(itemNameRight.text, ignoreCase = true) }) {
-                                Card(Modifier.fillMaxWidth().padding(top = 60.dp), elevation = CardDefaults.cardElevation(4.dp)) {
-                                    Column {
-                                        suggestions.filter { it.word.contains(itemNameRight.text, ignoreCase = true) }.take(5).forEach { sug ->
-                                            Text(sug.word, Modifier.fillMaxWidth().clickable {
-                                                itemNameRight = TextFieldValue(sug.word, TextRange(sug.word.length))
-                                                showSuggestionsRight = false
-                                            }.padding(12.dp))
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = {
-                                if (itemNameRight.text.isNotBlank()) {
-                                    viewModel.addItem(itemNameRight.text, quantityRight.text.toDoubleOrNull() ?: 1.0, "right")
-                                    itemNameRight = TextFieldValue("")
-                                    quantityRight = TextFieldValue("1")
-                                    showSuggestionsRight = false
+                                if (itemName.text.isNotBlank()) {
+                                    viewModel.addItem(itemName.text, quantity.text.toDoubleOrNull() ?: 1.0, "left")
+                                    itemName = TextFieldValue("")
+                                    quantity = TextFieldValue("1")
+                                    showSuggestions = false
                                 }
                             },
-                            Modifier.fillMaxWidth(),
+                            Modifier.weight(1f),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("للشق الأيسر")
+                        }
+
+                        Button(
+                            onClick = {
+                                if (itemName.text.isNotBlank()) {
+                                    viewModel.addItem(itemName.text, quantity.text.toDoubleOrNull() ?: 1.0, "right")
+                                    itemName = TextFieldValue("")
+                                    quantity = TextFieldValue("1")
+                                    showSuggestions = false
+                                }
+                            },
+                            Modifier.weight(1f),
+                            shape = androidx.compose.foundation.shape.CircleShape,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                         ) {
                             Icon(Icons.Default.Add, null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("للشق الأيمن")
                         }
                     }
                 }
