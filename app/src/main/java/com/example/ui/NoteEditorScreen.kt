@@ -68,9 +68,9 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                 // Left col
                 if (i < leftItems.size) {
                     val left = leftItems[i]
-                    append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
-                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${left.name}</td>")
                     append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (left.quantity % 1.0 == 0.0) left.quantity.toInt() else left.quantity}</td>")
+                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${left.name}</td>")
+                    append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
                 } else {
                     append("<td colspan='3' style='border: 1px solid black;'></td>")
                 }
@@ -78,8 +78,8 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                 // Right col
                 if (i < rightItems.size) {
                     val right = rightItems[i]
-                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${right.name}</td>")
                     append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (right.quantity % 1.0 == 0.0) right.quantity.toInt() else right.quantity}</td>")
+                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${right.name}</td>")
                     append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
                 } else {
                     append("<td colspan='3' style='border: 1px solid black;'></td>")
@@ -261,40 +261,39 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
             val rightItems = items.filter { it.section == "right" }
             val maxRows = maxOf(leftItems.size, rightItems.size)
 
-            LazyColumn(Modifier.fillMaxSize().padding(4.dp)) {
+            LazyColumn(Modifier.fillMaxSize().padding(2.dp)) {
                 items(maxRows) { rowIndex ->
-                    Row(Modifier.fillMaxWidth()) {
+                    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                         // Left Column Item
-                        if (rowIndex < leftItems.size) {
-                            NoteItemRow(
-                                leftItems[rowIndex], 
-                                fontSize, 
-                                Modifier.weight(1f),
-                                onUpdate = { viewModel.updateItem(it) },
-                                onDelete = { viewModel.deleteItem(it) }
-                            )
-                        } else {
-                            Box(Modifier.weight(1f))
+                        Box(Modifier.weight(1f).padding(1.dp)) {
+                            if (rowIndex < leftItems.size) {
+                                NoteItemRow(
+                                    leftItems[rowIndex], 
+                                    fontSize, 
+                                    Modifier.fillMaxWidth(),
+                                    onUpdate = { viewModel.updateItem(it) },
+                                    onDelete = { viewModel.deleteItem(it) }
+                                )
+                            }
                         }
                         
-                        // Vertical Divider
-                        Box(Modifier.width(1.dp).fillMaxHeight().background(Color.Gray))
+                        // Vertical Split Line
+                        VerticalDivider(color = Color.Gray, thickness = 1.dp)
                         
                         // Right Column Item
-                        if (rowIndex < rightItems.size) {
-                            NoteItemRow(
-                                rightItems[rowIndex], 
-                                fontSize, 
-                                Modifier.weight(1f),
-                                isRightSide = true,
-                                onUpdate = { viewModel.updateItem(it) },
-                                onDelete = { viewModel.deleteItem(it) }
-                            )
-                        } else {
-                            Box(Modifier.weight(1f))
+                        Box(Modifier.weight(1f).padding(1.dp)) {
+                            if (rowIndex < rightItems.size) {
+                                NoteItemRow(
+                                    rightItems[rowIndex], 
+                                    fontSize, 
+                                    Modifier.fillMaxWidth(),
+                                    onUpdate = { viewModel.updateItem(it) },
+                                    onDelete = { viewModel.deleteItem(it) }
+                                )
+                            }
                         }
                     }
-                    HorizontalDivider(color = Color.Gray)
+                    HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
                 }
             }
         }
@@ -306,7 +305,6 @@ fun NoteItemRow(
     item: NoteItem, 
     fontSize: androidx.compose.ui.unit.TextUnit, 
     modifier: Modifier, 
-    isRightSide: Boolean = false,
     onUpdate: (NoteItem) -> Unit,
     onDelete: (NoteItem) -> Unit
 ) {
@@ -367,49 +365,30 @@ fun NoteItemRow(
     }
 
     Row(
-        modifier.padding(4.dp).clickable { isEditing = true },
+        modifier.padding(2.dp)
+            .border(1.dp, Color.LightGray, MaterialTheme.shapes.small)
+            .padding(2.dp)
+            .clickable { isEditing = true },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (!isRightSide) {
-            IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
-            }
-            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-            Text(
-                text = item.name,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
-                fontSize = fontSize,
-                textAlign = TextAlign.End,
-                color = Color(0xFF0D47A1)
-            )
-            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-            Text(
-                text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
-                modifier = Modifier.width(40.dp),
-                textAlign = TextAlign.Center,
-                fontSize = fontSize,
-                fontWeight = FontWeight.Bold
-            )
-        } else {
-            Text(
-                text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
-                modifier = Modifier.width(40.dp),
-                textAlign = TextAlign.Center,
-                fontSize = fontSize,
-                fontWeight = FontWeight.Bold
-            )
-            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-            Text(
-                text = item.name,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
-                fontSize = fontSize,
-                textAlign = TextAlign.End,
-                color = Color(0xFF0D47A1)
-            )
-            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-            IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
-            }
+        Text(
+            text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
+            modifier = Modifier.width(40.dp),
+            textAlign = TextAlign.Center,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold
+        )
+        Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+        Text(
+            text = item.name,
+            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+            fontSize = fontSize,
+            textAlign = TextAlign.End,
+            color = Color(0xFF0D47A1)
+        )
+        Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+        IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
+            Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
         }
     }
 }
