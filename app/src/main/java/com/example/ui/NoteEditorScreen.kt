@@ -38,10 +38,14 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
     val currentItems by viewModel.currentItems.collectAsStateWithLifecycle()
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     
-    var itemName by remember { mutableStateOf(TextFieldValue("")) }
-    var quantity by remember { mutableStateOf(TextFieldValue("1")) }
-    var section by remember { mutableStateOf(TextFieldValue("")) }
-    var showSuggestions by remember { mutableStateOf(false) }
+    var itemNameLeft by remember { mutableStateOf(TextFieldValue("")) }
+    var quantityLeft by remember { mutableStateOf(TextFieldValue("1")) }
+    
+    var itemNameRight by remember { mutableStateOf(TextFieldValue("")) }
+    var quantityRight by remember { mutableStateOf(TextFieldValue("1")) }
+
+    var showSuggestionsLeft by remember { mutableStateOf(false) }
+    var showSuggestionsRight by remember { mutableStateOf(false) }
     
     var editingItem by remember { mutableStateOf<NoteItem?>(null) }
     var editName by remember { mutableStateOf(TextFieldValue("")) }
@@ -56,21 +60,30 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
             append("<h2 style='text-align: center;'>${currentNote?.title ?: ""}</h2>")
             append("<table style='width: 100%; border-collapse: collapse; table-layout: fixed;'>")
             val items = currentItems
-            for (i in items.indices step 2) {
+            val leftItems = items.filter { it.section == "left" }
+            val rightItems = items.filter { it.section == "right" }
+            val maxRows = maxOf(leftItems.size, rightItems.size)
+
+            for (i in 0 until maxRows) {
                 append("<tr>")
-                // Left col (order: Action/Return -> Name -> Qty)
-                val left = items[i]
-                append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
-                append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${left.name}</td>")
-                append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (left.quantity % 1.0 == 0.0) left.quantity.toInt() else left.quantity}</td>")
+                // Left col
+                if (i < leftItems.size) {
+                    val left = leftItems[i]
+                    append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
+                    append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${left.name}</td>")
+                    append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (left.quantity % 1.0 == 0.0) left.quantity.toInt() else left.quantity}</td>")
+                } else {
+                    append("<td colspan='3' style='border: 1px solid black;'></td>")
+                }
                 
                 // Right col
-                if (i + 1 < items.size) {
-                    val right = items[i+1]
+                if (i < rightItems.size) {
+                    val right = rightItems[i]
                     append("<td style='border: 1px solid black; width: 35%; padding: 4px;'>${right.name}</td>")
                     append("<td style='border: 1px solid black; width: 10%; text-align: center;'>${if (right.quantity % 1.0 == 0.0) right.quantity.toInt() else right.quantity}</td>")
+                    append("<td style='border: 1px solid black; width: 5%; text-align: center;'>X</td>")
                 } else {
-                    append("<td colspan='2' style='border: 1px solid black;'></td>")
+                    append("<td colspan='3' style='border: 1px solid black;'></td>")
                 }
                 append("</tr>")
             }
@@ -138,113 +151,149 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                 Modifier.fillMaxWidth().padding(8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1A237E))
             ) {
-                Column(Modifier.padding(8.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Left Input Column
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("الشق الأيسر", color = Color.White, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
                         OutlinedTextField(
-                            value = quantity,
-                            onValueChange = { quantity = it },
+                            value = quantityLeft,
+                            onValueChange = { quantityLeft = it },
                             label = { Text(stringResource(R.string.quantity), color = Color.White) },
-                            modifier = Modifier.weight(0.3f).onFocusChanged { 
-                                if (it.isFocused) quantity = quantity.copy(selection = TextRange(0, quantity.text.length)) 
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { 
+                                if (it.isFocused) quantityLeft = quantityLeft.copy(selection = TextRange(0, quantityLeft.text.length)) 
                             },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Next
-                            ),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedLabelColor = Color.White,
-                                unfocusedLabelColor = Color.White,
-                                focusedBorderColor = Color.White,
-                                unfocusedBorderColor = Color.LightGray
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
+                                focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
                             )
                         )
-                        Box(Modifier.weight(0.7f)) {
+                        Box {
                             OutlinedTextField(
-                                value = itemName,
+                                value = itemNameLeft,
                                 onValueChange = { 
-                                    itemName = it
-                                    showSuggestions = it.text.isNotEmpty()
+                                    itemNameLeft = it
+                                    showSuggestionsLeft = it.text.isNotEmpty()
                                 },
                                 label = { Text(stringResource(R.string.item_name), color = Color.White) },
                                 modifier = Modifier.fillMaxWidth().onFocusChanged {
-                                    if (it.isFocused) itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
+                                    if (it.isFocused) itemNameLeft = itemNameLeft.copy(selection = TextRange(0, itemNameLeft.text.length))
                                 },
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White,
-                                    focusedLabelColor = Color.White,
-                                    unfocusedLabelColor = Color.White,
-                                    focusedBorderColor = Color.White,
-                                    unfocusedBorderColor = Color.LightGray
+                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                    focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
+                                    focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
                                 )
                             )
-                            if (showSuggestions && suggestions.any { it.word.contains(itemName.text, ignoreCase = true) }) {
-                                Card(
-                                    Modifier.fillMaxWidth().padding(top = 60.dp),
-                                    elevation = CardDefaults.cardElevation(4.dp)
-                                ) {
+                            if (showSuggestionsLeft && suggestions.any { it.word.contains(itemNameLeft.text, ignoreCase = true) }) {
+                                Card(Modifier.fillMaxWidth().padding(top = 60.dp), elevation = CardDefaults.cardElevation(4.dp)) {
                                     Column {
-                                        suggestions.filter { it.word.contains(itemName.text, ignoreCase = true) }.take(5).forEach { sug ->
-                                            Text(
-                                                sug.word,
-                                                Modifier.fillMaxWidth().clickable {
-                                                    itemName = TextFieldValue(sug.word, TextRange(sug.word.length))
-                                                    showSuggestions = false
-                                                }.padding(12.dp)
-                                            )
+                                        suggestions.filter { it.word.contains(itemNameLeft.text, ignoreCase = true) }.take(5).forEach { sug ->
+                                            Text(sug.word, Modifier.fillMaxWidth().clickable {
+                                                itemNameLeft = TextFieldValue(sug.word, TextRange(sug.word.length))
+                                                showSuggestionsLeft = false
+                                            }.padding(12.dp))
                                         }
                                     }
                                 }
                             }
                         }
-                        
-                        OutlinedTextField(
-                            value = section,
-                            onValueChange = { section = it },
-                            label = { Text(stringResource(R.string.target_section), color = Color.White) },
-                            modifier = Modifier.weight(0.4f).onFocusChanged {
-                                if (it.isFocused) section = section.copy(selection = TextRange(0, section.text.length))
+                        Button(
+                            onClick = {
+                                if (itemNameLeft.text.isNotBlank()) {
+                                    viewModel.addItem(itemNameLeft.text, quantityLeft.text.toDoubleOrNull() ?: 1.0, "left")
+                                    itemNameLeft = TextFieldValue("")
+                                    quantityLeft = TextFieldValue("1")
+                                    showSuggestionsLeft = false
+                                }
                             },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                        }
+                    }
+
+                    // Divider
+                    Box(Modifier.width(1.dp).fillMaxHeight().background(Color.White))
+
+                    // Right Input Column
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("الشق الأيمن", color = Color.White, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                        OutlinedTextField(
+                            value = quantityRight,
+                            onValueChange = { quantityRight = it },
+                            label = { Text(stringResource(R.string.quantity), color = Color.White) },
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { 
+                                if (it.isFocused) quantityRight = quantityRight.copy(selection = TextRange(0, quantityRight.text.length)) 
+                            },
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedLabelColor = Color.White,
-                                unfocusedLabelColor = Color.White,
-                                focusedBorderColor = Color.White,
-                                unfocusedBorderColor = Color.LightGray
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
+                                focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
                             )
                         )
-                    }
-                    
-                    Button(
-                        onClick = {
-                            if (itemName.text.isNotBlank()) {
-                                viewModel.addItem(itemName.text, quantity.text.toDoubleOrNull() ?: 1.0, section.text)
-                                itemName = TextFieldValue("")
-                                quantity = TextFieldValue("1")
-                                section = TextFieldValue("")
-                                showSuggestions = false
+                        Box {
+                            OutlinedTextField(
+                                value = itemNameRight,
+                                onValueChange = { 
+                                    itemNameRight = it
+                                    showSuggestionsRight = it.text.isNotEmpty()
+                                },
+                                label = { Text(stringResource(R.string.item_name), color = Color.White) },
+                                modifier = Modifier.fillMaxWidth().onFocusChanged {
+                                    if (it.isFocused) itemNameRight = itemNameRight.copy(selection = TextRange(0, itemNameRight.text.length))
+                                },
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                    focusedLabelColor = Color.White, unfocusedLabelColor = Color.White,
+                                    focusedBorderColor = Color.White, unfocusedBorderColor = Color.LightGray
+                                )
+                            )
+                            if (showSuggestionsRight && suggestions.any { it.word.contains(itemNameRight.text, ignoreCase = true) }) {
+                                Card(Modifier.fillMaxWidth().padding(top = 60.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+                                    Column {
+                                        suggestions.filter { it.word.contains(itemNameRight.text, ignoreCase = true) }.take(5).forEach { sug ->
+                                            Text(sug.word, Modifier.fillMaxWidth().clickable {
+                                                itemNameRight = TextFieldValue(sug.word, TextRange(sug.word.length))
+                                                showSuggestionsRight = false
+                                            }.padding(12.dp))
+                                        }
+                                    }
+                                }
                             }
-                        },
-                        Modifier.fillMaxWidth().padding(top = 8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
-                    ) {
-                        Icon(Icons.Default.CheckCircle, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.save_item))
+                        }
+                        Button(
+                            onClick = {
+                                if (itemNameRight.text.isNotBlank()) {
+                                    viewModel.addItem(itemNameRight.text, quantityRight.text.toDoubleOrNull() ?: 1.0, "right")
+                                    itemNameRight = TextFieldValue("")
+                                    quantityRight = TextFieldValue("1")
+                                    showSuggestionsRight = false
+                                }
+                            },
+                            Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                        }
                     }
                 }
             }
             
-            // List Area (Two columns like the screenshot)
+            // List Area
             val fontSize = (currentNote?.fontSize ?: 14).sp
             val items = currentItems
-            val leftItems = items.filterIndexed { index, _ -> index % 2 == 0 }
-            val rightItems = items.filterIndexed { index, _ -> index % 2 != 0 }
+            val leftItems = items.filter { it.section == "left" }
+            val rightItems = items.filter { it.section == "right" }
             val maxRows = maxOf(leftItems.size, rightItems.size)
 
             LazyColumn(Modifier.fillMaxSize().padding(4.dp)) {
@@ -272,6 +321,7 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                                 rightItems[rowIndex], 
                                 fontSize, 
                                 Modifier.weight(1f),
+                                isRightSide = true,
                                 onUpdate = { viewModel.updateItem(it) },
                                 onDelete = { viewModel.deleteItem(it) }
                             )
@@ -291,6 +341,7 @@ fun NoteItemRow(
     item: NoteItem, 
     fontSize: androidx.compose.ui.unit.TextUnit, 
     modifier: Modifier, 
+    isRightSide: Boolean = false,
     onUpdate: (NoteItem) -> Unit,
     onDelete: (NoteItem) -> Unit
 ) {
@@ -343,25 +394,47 @@ fun NoteItemRow(
         modifier.padding(4.dp).clickable { isEditing = true },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
-            Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
+        if (!isRightSide) {
+            IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
+                Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
+            }
+            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+            Text(
+                text = item.name,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                fontSize = fontSize,
+                textAlign = TextAlign.End,
+                color = Color(0xFF0D47A1)
+            )
+            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+            Text(
+                text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
+                modifier = Modifier.width(40.dp),
+                textAlign = TextAlign.Center,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold
+            )
+        } else {
+            Text(
+                text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
+                modifier = Modifier.width(40.dp),
+                textAlign = TextAlign.Center,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold
+            )
+            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+            Text(
+                text = item.name,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                fontSize = fontSize,
+                textAlign = TextAlign.End,
+                color = Color(0xFF0D47A1)
+            )
+            Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
+            IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) {
+                Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(16.dp))
+            }
         }
-        Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-        Text(
-            text = item.name,
-            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
-            fontSize = fontSize,
-            textAlign = TextAlign.End,
-            color = Color(0xFF0D47A1)
-        )
-        Box(Modifier.width(1.dp).height(24.dp).background(Color.LightGray))
-        Text(
-            text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString(),
-            modifier = Modifier.width(40.dp),
-            textAlign = TextAlign.Center,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 
