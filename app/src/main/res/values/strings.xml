@@ -19,4 +19,7 @@
     <string name="cancel">إلغاء</string>
     <string name="save">حفظ</string>
     <string name="edit_item">تعديل الصنف</string>
+    <string name="exit_confirm_title">تأكيد الخروج</string>
+    <string name="exit_confirm_msg">هل أنت متأكد أنك تريد إغلاق التطبيق؟</string>
+    <string name="confirm">نعم</string>
 </resources>

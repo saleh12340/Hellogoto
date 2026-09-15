@@ -89,7 +89,7 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
 
     Scaffold(
         topBar = {
-            Column(Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
+            Column(Modifier.background(MaterialTheme.colorScheme.primaryContainer).statusBarsPadding().padding(top = 12.dp)) {
                 Row(
                     Modifier.fillMaxWidth().padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
