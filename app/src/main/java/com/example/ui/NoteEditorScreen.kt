@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
@@ -146,7 +147,10 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                             modifier = Modifier.weight(0.3f).onFocusChanged { 
                                 if (it.isFocused) quantity = quantity.copy(selection = TextRange(0, quantity.text.length)) 
                             },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
@@ -167,6 +171,7 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth().onFocusChanged {
                                     if (it.isFocused) itemName = itemName.copy(selection = TextRange(0, itemName.text.length))
                                 },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
@@ -203,6 +208,7 @@ fun NoteEditorScreen(viewModel: OmniViewModel, onOpenHistory: () -> Unit) {
                             modifier = Modifier.weight(0.4f).onFocusChanged {
                                 if (it.isFocused) section = section.copy(selection = TextRange(0, section.text.length))
                             },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
@@ -304,13 +310,17 @@ fun NoteItemRow(
                         label = { Text(stringResource(R.string.item_name)) },
                         modifier = Modifier.onFocusChanged {
                             if (it.isFocused) editName = editName.copy(selection = TextRange(0, editName.text.length))
-                        }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     OutlinedTextField(
                         value = editQty,
                         onValueChange = { editQty = it },
                         label = { Text(stringResource(R.string.quantity)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
                         modifier = Modifier.onFocusChanged {
                             if (it.isFocused) editQty = editQty.copy(selection = TextRange(0, editQty.text.length))
                         }
