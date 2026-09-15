@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">الملاحظات الذكية</string>
+    <string name="clear_page">تفريغ الصفحة</string>
+    <string name="new_note">صفحة ملاحظة جديدة</string>
+    <string name="history">سجل الصفحات</string>
+    <string name="smart_print">الطباعة الذكية</string>
+    <string name="print_split">طباعة الشقين</string>
+    <string name="save_item">موافق - حفظ وإضافة الصنف</string>
+    <string name="item_name">اكتب اسم الصنف...</string>
+    <string name="quantity">العدد / الرقم</string>
+    <string name="target_section">القسم Target</string>
+    <string name="font_size">حجم الخط:</string>
+    <string name="scroll_mode">وضع التمرير: </string>
+    <string name="on">مفعل</string>
+    <string name="off">معطل</string>
+    <string name="add_note">إضافة ملاحظة</string>
+    <string name="delete">حذف</string>
+    <string name="confirm_delete">هل أنت متأكد من الحذف؟</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+</resources>

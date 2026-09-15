@@ -1,0 +1,6 @@
+{
+  "name": "Smart Notes",
+  "description": "A smart notes application with auto-save, persistence, and Bluetooth print optimization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
